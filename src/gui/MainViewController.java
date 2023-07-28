@@ -3,6 +3,7 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import gui.util.Alerts;
@@ -35,19 +36,22 @@ public class MainViewController implements Initializable{
 	
 	@FXML
 	public void onMenuItemDepartmentAction() {
-		loadView2("/gui/DepartmentList.fxml");			//carrega a tela DepartmentList.fxml
+		loadView("/gui/DepartmentList.fxml", (DepartmentListController controller) -> {			//carrega a tela DepartmentList.fxml; funcao lambda para acessar o controlador e carregar a lista de departamentos.
+			controller.setDepartmentService(new DepartmentService());
+			controller.updateTabbleView();
+		});
 	}
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		loadView("/gui/About.fxml");		//carrega a tela About.fxml
+		loadView("/gui/About.fxml", x -> {});		//carrega a tela About.fxml; funcao lambda vazia
 	}
 	
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {		//interface initializable
 	}
 	
-	private synchronized void loadView(String absoluteName) {			//manipula a scene principal, adicionando o mainMenu e os children da nova janela (newVBox). Synchronized garante a execucao no multithread
+	private synchronized <T> void loadView(String absoluteName, Consumer<T> initializingAction) {			//manipula a scene principal, adicionando o mainMenu e os children da nova janela (newVBox). Synchronized garante a execucao no multithread. Consumer (Generics) permite o uso de expressoes lambda
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));		//carrega uma tela, endereco da tela recebido como parametro
 			VBox newVBox = loader.load();		//tela definida como VBox
@@ -60,31 +64,11 @@ public class MainViewController implements Initializable{
 			mainVBox.getChildren().add(mainMenu);			//adiciona o mainMenu
 			mainVBox.getChildren().addAll(newVBox.getChildren());			//adiciona uma colecao, todos os children do newVBox
 			
+			T controller = loader.getController();			//referencia ao controller com Generics
+			initializingAction.accept(controller);			//executa a funcao lambda
 		}
 		catch (IOException e) {
 			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);		//trata a excecao mostrando um "Alerts"
-		}
-	}
-	
-	private synchronized void loadView2(String absoluteName) {			//teste do servico
-		try {
-			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
-			VBox newVBox = loader.load();
-			
-			Scene mainScene = Main.getMainScene();
-			VBox mainVBox = (VBox) ((ScrollPane) mainScene.getRoot()).getContent();
-			
-			Node mainMenu = mainVBox.getChildren().get(0);	
-			mainVBox.getChildren().clear();
-			mainVBox.getChildren().add(mainMenu);
-			mainVBox.getChildren().addAll(newVBox.getChildren());
-			
-			DepartmentListController controller = loader.getController();			//referencia ao controlador
-			controller.setDepartmentService(new DepartmentService());			//injecao de dependencia
-			controller.updateTabbleView();			//teste do servico. Exibe a lista de departamentos na tabela
-		}
-		catch (IOException e) {
-			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
 		}
 	}
 }
