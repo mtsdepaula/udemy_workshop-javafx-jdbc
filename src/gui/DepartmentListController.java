@@ -46,10 +46,10 @@ public class DepartmentListController implements Initializable{
 	
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
-		initializaNodes();			//metodo auxiliar
+		initializeNodes();			//metodo auxiliar
 	}
 
-	private void initializaNodes() {
+	private void initializeNodes() {
 		tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));			//padrao javaFX para iniciar o comportamento das colunas id e name
 		tableColumnName.setCellValueFactory(new PropertyValueFactory<>("name"));
 		
